@@ -43,7 +43,7 @@ installed properly.
 
 -   Install dependencies : `npm install`
 
--   Execute : `node index.js`
+-   Execute : `node server.js`
 
 -   Run the front part (command bellow have to be run from front folder):
 
