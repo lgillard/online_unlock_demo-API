@@ -1,3 +1,4 @@
+// Setup
 const express = require('express');
 
 const app = express();
@@ -7,16 +8,23 @@ app.use(function(req, res, next) {
 	next();
 });
 
-const server = app.listen(3001, function()
-{
-	console.log('server running on port 3001');
-});
+const server = require('http').createServer(app);
+
 
 const io = require('socket.io')(server, {
 	cors: {
 		origin: '*',
 	},
 });
+
+const port = process.env.PORT || 3000;
+
+server.listen(port, function () {
+	console.log('Server listening at port %d', port);
+});
+
+
+// Game
 
 const buildCard = name =>
 {

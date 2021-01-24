@@ -52,3 +52,7 @@ installed properly.
 -   Execute : `npm run serve`
 
 Now you can open the project in your favorite browser
+
+# The project is already deployed !
+The project is running on Glitch here:
+<https://catnip-jagged-catshark.glitch.me/>
