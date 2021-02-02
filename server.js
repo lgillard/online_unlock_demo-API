@@ -11,7 +11,6 @@ app.use(function(req, res, next)
 
 const server = require('http').createServer(app);
 
-
 const io = require('socket.io')(server, {
 	cors: {
 		origin: '*',
@@ -24,7 +23,6 @@ server.listen(port, function()
 {
 	console.log('Server listening at port %d', port);
 });
-
 
 // Game
 
@@ -126,11 +124,6 @@ const parties  = {
 io.on('connection', function(socket)
 {
 	let partyCode = '';
-	socket.emit('SCENARIO_IN_PROGRESS', parties[partyCode].scenarioInProgress);
-	if (parties[partyCode].scenarioInProgress !== '')
-	{
-		socket.emit('CARD_STACKS', { cardsOnBoard: parties[partyCode].cardsOnBoard, cardsOnPick: parties[partyCode].cardsOnPick, cardsOnDiscard: cardsOnDiscard });
-	}
 
 	socket.on('UPD_PARTY_CODE', ({ newPartyCode, saveParty }) =>
 	{
@@ -141,7 +134,7 @@ io.on('connection', function(socket)
 
 		// Leave and remove party if necessary
 		socket.leave(partyCode);
-		oldRoomClients = io.sockets.adapter.rooms[partyCode];
+		oldRoomClients = io.sockets.adapter.rooms.get(partyCode);
 		if (!saveParty && oldRoomClients !== undefined && oldRoomClients.length < 1)
 		{
 			parties[partyCode] = undefined;
@@ -161,6 +154,9 @@ io.on('connection', function(socket)
 				cardsOnBoard: parties[partyCode].cardsOnBoard, cardsOnPick: parties[partyCode].cardsOnPick, cardsOnDiscard: parties[partyCode].cardsOnDiscard,
 			});
 		}
+
+		const clientsSet = io.sockets.adapter.rooms.get(partyCode);
+		io.to(partyCode).emit('FRIENDS_CONNECTED', Array.from(clientsSet));
 	});
 
 	socket.on('ABANDON_CURRENT_GAME', () =>
@@ -188,9 +184,7 @@ io.on('connection', function(socket)
 		// Notify clients
 		io.to(partyCode).emit('SCENARIO_IN_PROGRESS', parties[partyCode].scenarioInProgress);
 		io.to(partyCode).emit('CARD_STACKS', {
-			cardsOnBoard:   parties[partyCode].cardsOnBoard,
-			cardsOnPick:    parties[partyCode].cardsOnPick,
-			cardsOnDiscard: parties[partyCode].cardsOnDiscard,
+			cardsOnBoard: parties[partyCode].cardsOnBoard, cardsOnPick: parties[partyCode].cardsOnPick, cardsOnDiscard: parties[partyCode].cardsOnDiscard,
 		});
 	});
 
@@ -257,6 +251,21 @@ io.on('connection', function(socket)
 				card.rotation = (rotation + card.rotation + 360) % 360;
 				io.to(partyCode).emit('CARD_' + name + '_TURN', card.rotation);
 			}
+		}
+	});
+
+	socket.on('MOUSE_MOVE', ({ x, y }) =>
+	{
+		io.to(partyCode).emit('MOUSE_' + socket.id + '_MOVE', ({ x: x, y: y }));
+	});
+
+	socket.on('disconnect', () =>
+	{
+		io.to(partyCode).emit('FRIEND_DISCONNECTION', socket.id);
+		const room = io.sockets.adapter.rooms[partyCode];
+		if (room === undefined || room.length < 1)
+		{
+			parties[partyCode] = undefined;
 		}
 	});
 });
