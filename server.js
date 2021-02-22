@@ -188,9 +188,7 @@ io.on('connection', function(socket)
 		// Notify clients
 		io.to(partyCode).emit('SCENARIO_IN_PROGRESS', parties[partyCode].scenarioInProgress);
 		io.to(partyCode).emit('CARD_STACKS', {
-			cardsOnBoard:   parties[partyCode].cardsOnBoard,
-			cardsOnPick:    parties[partyCode].cardsOnPick,
-			cardsOnDiscard: parties[partyCode].cardsOnDiscard,
+			cardsOnBoard: parties[partyCode].cardsOnBoard, cardsOnPick: parties[partyCode].cardsOnPick, cardsOnDiscard: parties[partyCode].cardsOnDiscard,
 		});
 	});
 
@@ -237,15 +235,14 @@ io.on('connection', function(socket)
 				card.x        = x;
 				card.y        = y;
 				card.position = parties[partyCode].cardsOnBoard.length;
-
-				io.to(partyCode).emit('CARD_' + name + '_MOVED', card);
 			}
-			else if (card.position > position)
+			else if (card.position >= position)
 			{
 				card.position = card.position - 1;
 			}
 		}
-		io.to(partyCode).emit('CARD_GO_FRONT', { name, position });
+		const result = { cardsOnBoard: parties[partyCode].cardsOnBoard, cardsOnPick: parties[partyCode].cardsOnPick, cardsOnDiscard: parties[partyCode].cardsOnDiscard };
+		io.to(partyCode).emit('CARD_STACKS', result);
 	});
 
 	socket.on('CARD_ROTATE', ({ name, rotation }) =>
